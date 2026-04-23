@@ -1,0 +1,32 @@
+import { Heading } from "../Components/Heading"
+import { SubHeading } from "../Components/SubHeading"
+import { InputBox } from "../Components/InputBox"
+import { ButtonComponent } from "../Components/ButtonComponent"
+import { ButtonWarning } from "../Components/ButtonWarning";
+
+export function Login() {
+  return (
+    <div className="bg-[#c2ceda] min-h-screen flex items-center justify-center">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-96">
+        
+        {/* Header */}
+        <div className="text-center mb-6">
+          <Heading value={"Login"} />
+          <SubHeading value={"Enter your credentials to access your account"} />
+        </div>
+
+        {/* Form Fields */}
+        <div className="space-y-4">
+          <InputBox value1={"Email"} value2={"johnsnow@gmail.com"} value3={"text"} />
+          <InputBox value1={"Password"} value2={""} value3={"password"} />
+        </div>
+
+        {/* Button */}
+        <div className="mt-6">
+          <ButtonComponent value={"Login"} />
+        </div>
+        <ButtonWarning label={"Don't have an account?"} buttonText={"Signup"} to={"/signup"} />
+      </div>
+    </div>
+  );
+}
