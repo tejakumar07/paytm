@@ -31,7 +31,7 @@ export function Send() {
           value={"Transfer Money"}
           onClick={() => {
             axios.post(
-              "http://localhost:3000/sapi/v1/account/transfer",
+              "https://paytm-lmm3.onrender.com/sapi/v1/account/transfer",
               {
                 to: id,
                 amount: parseFloat(amount),

@@ -9,7 +9,7 @@ export function UsersComponent({ filter }) {
   useEffect(() => {
     async function usersData() {
       const response = await axios.get(
-        "http://localhost:3000/sapi/v1/user/bulk?filter=" + filter,
+        "https://paytm-lmm3.onrender.com/sapi/v1/user/bulk?filter=" + filter,
       );
       setUsers(response.data.user);
     }
