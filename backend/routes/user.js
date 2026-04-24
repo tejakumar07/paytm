@@ -164,17 +164,17 @@ router.get("/bulk", async (req, res) => {
         "$or": [{
             firstName: {
                 "$regex": filter,
-                "$options": i
+                "$options": "i"
             }
         }, {
             lastName: {
                 "$regex": filter,
-                "$options": i
+                "$options": "i"
             }
         }, {
             username: {
                 "$regex": filter,
-                "$options":i
+                "$options":"i"
             }
         }]
     })
