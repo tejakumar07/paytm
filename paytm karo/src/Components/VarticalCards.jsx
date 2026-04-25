@@ -7,7 +7,7 @@ export function VericalCards({ imageURL, imageName, imageCover }) {
           {imageCover}
         </h1>
 
-        <button className="bg-blue-600 rounded-lg w-40 h-10 text-white hover:bg-blue-500 font-bold flex items-center justify-center self-start">
+        <button className="bg-blue-600 rounded-lg w-40 h-10 text-white hover:bg-blue-300 font-bold flex items-center justify-center self-start">
           Book Now
         </button>
       </div>

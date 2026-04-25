@@ -4,6 +4,7 @@ import { SignUp } from "./pages/Signup.jsx";
 import { Dashboard } from "./pages/Dashboard.jsx";
 import { Send } from "./pages/Send.jsx";
 import { HomePage } from "./pages/HomePage.jsx";
+import { PageNotFound } from "./pages/PageNotFound.jsx";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path={"/dashboard"} element={<Dashboard />} />
           <Route path={"/send"} element={<Send />} />
           <Route path={""} element={<HomePage />} />
+          <Route path={"*"} element={<PageNotFound />} />
         </Routes>
       </BrowserRouter>
     </div>
