@@ -1,18 +1,19 @@
+require("dotenv").config();
+
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const cors = require("cors");
 
 const app = express();
 
-const mainRouter = require("../backend/routes/index");
+const mainRouter = require("./routes/index");
 
 app.use(cors());
 app.use(express.json());
 
 app.use("/sapi/v1", mainRouter);
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on ${PORT}`);
 });
