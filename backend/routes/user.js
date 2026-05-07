@@ -1,6 +1,6 @@
 const express = require("express");
 const zod = require("zod");
-const { JWT_SECRET } = require("../config")
+const { JWT_SECRET } = require("../config");
 const jwt = require("jsonwebtoken");
 const { User, Account } = require("../db");
 const { authMiddleware } = require("../middlewares/middleware");
@@ -8,185 +8,212 @@ const bcrypt = require("bcrypt");
 const app = express();
 
 const router = express.Router();
-app.use(express.json())
-
+app.use(express.json());
 
 const signupBody = zod.object({
-    email: zod.string().email(),
-    password: zod.string(),
-    firstName: zod.string(),
-    lastName: zod.string()
-})
+  email: zod.string().email(),
+  password: zod.string(),
+  firstName: zod.string(),
+  lastName: zod.string(),
+});
 
 const signinBody = zod.object({
-    email: zod.string().email(),
-    password: zod.string()
-})
+  email: zod.string().email(),
+  password: zod.string(),
+});
 
 const updateBody = zod.object({
-    password : zod.string().optional(),
-    firstName : zod.string().optional(),
-    lastName : zod.string().optional()
-})
-
+  password: zod.string().optional(),
+  firstName: zod.string().optional(),
+  lastName: zod.string().optional(),
+});
 
 router.post("/signup", async (req, res) => {
-    const { success } = signupBody.safeParse(req.body);
+  const { success } = signupBody.safeParse(req.body);
 
-    if(!success) {
-        return res.status(411).json({msg: "Bad Requests"})
-    }
+  if (!success) {
+    return res.status(411).json({ msg: "Bad Requests" });
+  }
 
-    const existingUser = await User.findOne({
-        email: req.body.email
-    })
+  const existingUser = await User.findOne({
+    email: req.body.email,
+  });
 
-    if (existingUser) {
-        return res.status(411).json({
-            msg: "User already Exisit Please Login"
-        })
-    }
+  if (existingUser) {
+    return res.status(411).json({
+      msg: "User already Exisit Please Login",
+    });
+  }
 
-    const user = await User.create({
-        email: req.body.email,
-        password: req.body.password,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName
-    })
+  const user = await User.create({
+    email: req.body.email,
+    password: req.body.password,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+  });
 
-    const userId = user._id;
+  const userId = user._id;
 
-    await Account.create({
-        userId,
-        balance: 1 + Math.random() * 1000
-    })
+  await Account.create({
+    userId,
+    balance: 1 + Math.random() * 1000,
+  });
 
-    const token = jwt.sign({userId}, JWT_SECRET);
+  const token = jwt.sign({ userId }, JWT_SECRET);
 
-    res.json({
-        message: "User Created Successfully",
-        token: token
-    })
-})
+  res.json({
+    message: "User Created Successfully",
+    token: token,
+    firstName: user.firstName,
+    lastName: user.lastName,
+  });
+});
 
 router.post("/signin", async (req, res) => {
-    const { success } = signinBody.safeParse(req.body);
+  const { success } = signinBody.safeParse(req.body);
 
-    if(!success) {
-        res.status(411).json({
-            msg: "Bad Inputs"
-        })
+  if (!success) {
+    return res.status(400).json({
+      msg: "Bad Inputs",
+    });
+  }
+
+  try {
+    const user = await User.findOne({
+      email: req.body.email,
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        msg: "User does not exist. Try again.",
+      });
     }
 
-    try {
+    const isPasswordValid = await bcrypt.compare(
+      req.body.password,
+      user.password,
+    );
 
-        const user = await User.findOne({
-        email: req.body.email
-        })
-
-        const isPasswordValid = user && (await bcrypt.compare(req.body.password, user.password));
-
-        if(isPasswordValid) {
-        const token = jwt.sign({userId: user._id}, JWT_SECRET);
-        res.json({
-            msg: token
-        })
-        return
-        }
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        msg: "User does not exist. Try again.",
+      });
     }
-    catch(e) {
-        return res.status(411).json({msg: e})
+
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET);
+    return res.json({
+      msg: "Successfully logged in",
+      token: token,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    });
+  } catch (e) {
+    return res.status(500).json({ msg: "Internal Server Error" });
+  }
+});
+
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select(
+      "firstName lastName email",
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        msg: "User not found",
+      });
     }
-    return res.status(411).json({
-        msg: "User Does Not exist!"
-    })
-})
+
+    return res.json({
+      user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      msg: "Internal Server Error",
+    });
+  }
+});
 
 router.put("/", authMiddleware, async (req, res) => {
-    const { success } = updateBody.safeParse(req.body);
-    
-    if(!success) {
-        return res.status(411).json({
-            msg: "Error while updating information"
-        })
+  const { success } = updateBody.safeParse(req.body);
+
+  if (!success) {
+    return res.status(411).json({
+      msg: "Error while updating information",
+    });
+  }
+
+  try {
+    const updates = {};
+    if (req.body.firstName) {
+      updates.firstName = req.body.firstName;
     }
 
-    try {
-        const updates = {};
-        if (req.body.firstName) {
-            updates.firstName = req.body.firstName;
-        }
-
-        if (req.body.lastName) {
-            updates.lastName = req.body.lastName
-        }
-
-        if (req.body.password) {
-            updates.password = await bcrypt.hash(req.body.password, 10)
-        }
-
-        if(Object.keys(updates).length === 0) {
-            return res.status(400).json({
-                msg: "No valid Changes to update"
-            })
-        }
-
-        const result = await User.updateOne(
-            {_id: req.userId},
-            {$set: updates}
-        )
-
-        if(result.matchedCount === 0) {
-            return res.status(400).json({
-                msg: "User Not Found"
-            })
-        }
-
-        res.json({
-            msg: "User updated Successfully"
-        })
-
+    if (req.body.lastName) {
+      updates.lastName = req.body.lastName;
     }
 
-    catch(error) {
-        res.status(500).json({
-            msg: "Internal Server Error"
-        })
+    if (req.body.password) {
+      updates.password = await bcrypt.hash(req.body.password, 10);
     }
 
-})
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        msg: "No valid Changes to update",
+      });
+    }
 
+    const result = await User.updateOne({ _id: req.userId }, { $set: updates });
+
+    if (result.matchedCount === 0) {
+      return res.status(400).json({
+        msg: "User Not Found",
+      });
+    }
+
+    res.json({
+      msg: "User updated Successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      msg: "Internal Server Error",
+    });
+  }
+});
 
 router.get("/bulk", async (req, res) => {
-    const filter = req.query.filter || "";
+  const filter = req.query.filter || "";
 
-    const users = await User.find({
-        "$or": [{
-            firstName: {
-                "$regex": filter,
-                "$options": "i"
-            }
-        }, {
-            lastName: {
-                "$regex": filter,
-                "$options": "i"
-            }
-        }, {
-            username: {
-                "$regex": filter,
-                "$options":"i"
-            }
-        }]
-    })
-    res.json({
-        user: users.map(user => ({
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            _id: user._id
-        }))
-    })
-})
-
+  const users = await User.find({
+    $or: [
+      {
+        firstName: {
+          $regex: filter,
+          $options: "i",
+        },
+      },
+      {
+        lastName: {
+          $regex: filter,
+          $options: "i",
+        },
+      },
+      {
+        username: {
+          $regex: filter,
+          $options: "i",
+        },
+      },
+    ],
+  });
+  res.json({
+    user: users.map((user) => ({
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      _id: user._id,
+    })),
+  });
+});
 
 module.exports = router;
