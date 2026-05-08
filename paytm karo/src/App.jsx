@@ -5,6 +5,7 @@ import { Dashboard } from "./pages/Dashboard.jsx";
 import { Send } from "./pages/Send.jsx";
 import { HomePage } from "./pages/HomePage.jsx";
 import { PageNotFound } from "./pages/PageNotFound.jsx";
+import { Analytics } from "@vercel/analytics/next"
 
 function App() {
   return (
