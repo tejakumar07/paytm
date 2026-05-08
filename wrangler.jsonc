@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "paytm",
+  "compatibility_date": "2026-05-08",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "paytm karo"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
